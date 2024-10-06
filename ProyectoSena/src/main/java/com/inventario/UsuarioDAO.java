@@ -5,30 +5,42 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class UsuarioDAO {
-    public boolean login(String username, String password) {
-        try (Connection conn = DatabaseConnection.getConnection()) {
-            String query = "SELECT * FROM usuarios WHERE username = ? AND password = ?";
-            PreparedStatement stmt = conn.prepareStatement(query);
+
+    // Método para crear un nuevo usuario
+    public boolean createUser(String username, String password) {
+        String sql = "INSERT INTO usuarios (username, password) VALUES (?, ?)";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
             stmt.setString(1, username);
             stmt.setString(2, password);
+            int rowsInserted = stmt.executeUpdate();
 
-            ResultSet rs = stmt.executeQuery();
-            return rs.next(); // Si hay un resultado, el usuario es válido.
+            return rowsInserted > 0;  // Si se insertó al menos una fila, el usuario fue creado
+
         } catch (SQLException e) {
             e.printStackTrace();
-            return false;
         }
+        return false;  // Si hay error, devuelve falso
     }
 
-    public void createUser(String username, String password) {
-        try (Connection conn = DatabaseConnection.getConnection()) {
-            String query = "INSERT INTO usuarios (username, password) VALUES (?, ?)";
-            PreparedStatement stmt = conn.prepareStatement(query);
+    // Método para iniciar sesión
+    public boolean login(String username, String password) {
+        String sql = "SELECT * FROM usuarios WHERE username = ? AND password = ?";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
             stmt.setString(1, username);
             stmt.setString(2, password);
-            stmt.executeUpdate();
+            ResultSet rs = stmt.executeQuery();
+
+            return rs.next();  // Si hay algún resultado, el login es correcto
+
         } catch (SQLException e) {
             e.printStackTrace();
         }
+        return false;  // Si hay error o no se encontró al usuario, devuelve falso
     }
 }
